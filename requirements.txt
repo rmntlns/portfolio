@@ -1,0 +1,8 @@
+python==3.10.9
+streamlit
+streamlit-chat 
+openai
+langchain
+chromadb
+tiktoken
+pillow
