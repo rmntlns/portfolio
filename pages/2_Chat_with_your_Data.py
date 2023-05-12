@@ -77,7 +77,7 @@ if openai_api_key and db:
         openai_api_key=openai_api_key,
         model_name=model,
         max_tokens=max_tokens,
-        streaming=True
+        stream=True
         )
     
     # Create a ConversationEntityMemory object if not already created
