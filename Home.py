@@ -50,7 +50,7 @@ def gen_db():
     texts = text_splitter.create_documents([doc.page_content for doc in data])
     for i, text in enumerate(texts):
         text.metadata["source"] = f"Document {i + 1}"
-    embeddings = OpenAIEmbeddings()
+    embeddings = OpenAIEmbeddings(openai_api_key=openai.api_key)
     db = Chroma.from_documents(texts, embeddings)
     return db
 
