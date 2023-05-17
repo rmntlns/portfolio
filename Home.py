@@ -68,10 +68,8 @@ with st.container():
         openai.api_key = openai_api_key
         os.environ["openai_api_key"] = openai.api_key
         st.subheader("Upload a document.")
-        st.write("Your doc will be chunked and vectorized.")
         file_load = st.file_uploader("Upload File (TXT or PDF)")
-        st.subheader("OR")
-        st.write("Paste a URL to a Webpage.")
+        st.subheader("OR Paste a link to an Article.")
         url_load = st.text_input(label="Paste URL and press Enter", placeholder="Paste your URL here and press Enter")
         if file_load:
             file_path = file_save(file_load)
