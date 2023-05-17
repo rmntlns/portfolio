@@ -4,6 +4,18 @@ from PIL import Image
 from langchain.chat_models import ChatOpenAI
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 
+st.set_page_config(
+    page_title="Ramon Tilanus Portfolio",
+    page_icon="🧊",
+    layout="centered",
+    initial_sidebar_state="auto",
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': None
+    }
+)
+
 # Set Session State
 if "openai_api_key" not in st.session_state:
     st.error("Please set your OpenAI API Key.", icon="🚨")

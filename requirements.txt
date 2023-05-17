@@ -5,3 +5,9 @@ langchain
 chromadb
 tiktoken
 pillow
+llama-index
+unstructured
+tabulate
+pdf2image
+pytesseract
+python-magic-bin==0.4.14

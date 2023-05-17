@@ -6,6 +6,18 @@ from langchain.prompts import PromptTemplate
 from langchain.chains.question_answering import load_qa_chain
 from langchain.memory import ConversationBufferMemory, CombinedMemory, ConversationKGMemory
 
+st.set_page_config(
+    page_title="Ramon Tilanus Portfolio",
+    page_icon="🧊",
+    layout="centered",
+    initial_sidebar_state="auto",
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': None
+    }
+)
+
 # Set Session State
 if "openai_api_key" not in st.session_state:
     st.error("Please set your OpenAI API Key.", icon="🚨")

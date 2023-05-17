@@ -3,11 +3,14 @@ import openai
 import tempfile
 import streamlit as st
 import pandas as pd
+import pdf2image
+import pytesseract
 from PIL import Image
 from langchain.document_loaders import TextLoader
+from langchain.document_loaders import UnstructuredURLLoader
+from tabulate import tabulate
 from langchain.document_loaders import DataFrameLoader
 from langchain.document_loaders import PyPDFLoader
-from langchain.chat_models import ChatOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
@@ -57,20 +60,19 @@ def gen_db():
 
 with st.container():
     st.header("Enter your OpenAI API Key")
-    openai_api_key = st.text_input(
-        label="OpenAI API Key",
-        placeholder="Paste your OpenAI API Key, sk-",
-        type="password",
-    )
+    openai_api_key = st.text_input(label="OpenAI API Key", placeholder="Paste your OpenAI API Key, sk-", type="password")
     st.session_state["openai_api_key"] = openai_api_key
     
 
     if openai_api_key:
         openai.api_key = openai_api_key
         os.environ["openai_api_key"] = openai.api_key
-        st.header("Upload a document.")
+        st.subheader("Upload a document.")
         st.subheader("Your doc will be chunked and vectorized.")
-        file_load = st.file_uploader("Upload File (TXT, PDF or CSV)")
+        file_load = st.file_uploader("Upload File (TXT or PDF)")
+        st.subheader("OR")
+        st.subheader("Paste a URL to a Webpage.")
+        url_load = st.text_input(label="Paste URL and press Enter", placeholder="Paste your URL here and press Enter")
         if file_load:
             file_path = file_save(file_load)
             filename = file_load.name
@@ -85,15 +87,15 @@ with st.container():
                         st.session_state["db"] = db
                     st.success("Done!")
 
-            elif file_load and filetype == "csv":
-                df = pd.read_csv(file_path)
-                loader = DataFrameLoader(df)
-                data = loader.load()
-                if data:
-                    with st.spinner("Chunking and Vectorizing..."):
-                        db = gen_db()
-                        st.session_state["db"] = db
-                    st.success("Done!")
+            # elif file_load and filetype == "csv":
+            #     df = pd.read_csv(file_path)
+            #     loader = DataFrameLoader(df)
+            #     data = loader.load()
+            #     if data:
+            #         with st.spinner("Chunking and Vectorizing..."):
+            #             db = gen_db()
+            #             st.session_state["db"] = db
+            #         st.success("Done!")
 
             elif file_load and filetype == "pdf":
                 loader = PyPDFLoader(file_path)
@@ -104,8 +106,17 @@ with st.container():
                         st.session_state["db"] = db
                     st.success("Done!")
 
+        elif url_load:
+            loader = UnstructuredURLLoader(urls=[url_load])
+            data = loader.load()
+            if data:
+                with st.spinner("Chunking and Vectorizing..."):
+                    db = gen_db()
+                    st.session_state["db"] = db
+                st.success("Done!")
+
         else:
-            st.info("Please Upload a TXT, PDF or CSV File.")
+            st.info("Please Upload a TXT, PDF or provide a link to a Webpage.")
     else:
         st.info("Please provide your API Key.")
 
