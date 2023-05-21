@@ -9,5 +9,6 @@ llama-index
 unstructured
 tabulate
 pdf2image
+pypdf
 pytesseract
 python-magic
