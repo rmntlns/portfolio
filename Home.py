@@ -3,17 +3,14 @@ import openai
 import tempfile
 import streamlit as st
 import pandas as pd
-import pdf2image
-import pytesseract
 from PIL import Image
-from langchain.document_loaders import TextLoader
-from langchain.document_loaders import UnstructuredURLLoader
-from tabulate import tabulate
-from langchain.document_loaders import DataFrameLoader
-from langchain.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import TextLoader
+from langchain_community.document_loaders import DataFrameLoader
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.chat_models import ChatOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores import Chroma
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
 
 st.set_page_config(
     page_title="Ramon Tilanus Portfolio",
@@ -103,18 +100,6 @@ with st.container():
                         db = gen_db()
                         st.session_state["db"] = db
                     st.success("Done!")
-
-        elif url_load:
-            loader = UnstructuredURLLoader(urls=[url_load])
-            data = loader.load()
-            if data:
-                with st.spinner("Chunking and Vectorizing..."):
-                    db = gen_db()
-                    st.session_state["db"] = db
-                st.success("Done!")
-
-        else:
-            st.info("Please Upload a TXT, PDF or provide a link to a Webpage.")
     else:
         st.info("Please provide your API Key.")
 
