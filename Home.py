@@ -7,7 +7,7 @@ from PIL import Image
 from langchain_community.document_loaders import TextLoader
 from langchain_community.document_loaders import DataFrameLoader
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_community.chat_models import ChatOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
