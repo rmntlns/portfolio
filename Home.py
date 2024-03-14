@@ -7,9 +7,9 @@ from PIL import Image
 from langchain_community.document_loaders import TextLoader
 from langchain_community.document_loaders import DataFrameLoader
 from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.chat_models import ChatOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 
 st.set_page_config(
@@ -65,7 +65,7 @@ with st.container():
         openai.api_key = openai_api_key
         os.environ["openai_api_key"] = openai.api_key
         st.subheader("Upload a document.")
-        file_load = st.file_uploader("Upload File (TXT or PDF)")
+        file_load = st.file_uploader("Upload File (TXT, PDF or CSV)")
         if file_load:
             file_path = file_save(file_load)
             filename = file_load.name
@@ -73,6 +73,16 @@ with st.container():
 
             if file_load and filetype == "txt":
                 loader = TextLoader(file_path, encoding='utf-8')
+                data = loader.load()
+                if data:
+                    with st.spinner("Chunking and Vectorizing..."):
+                        db = gen_db()
+                        st.session_state["db"] = db
+                    st.success("Done!")
+
+            elif file_load and filetype == "csv":
+                df = pd.read_csv(file_path)
+                loader = DataFrameLoader(df)
                 data = loader.load()
                 if data:
                     with st.spinner("Chunking and Vectorizing..."):

@@ -36,9 +36,9 @@ image = image.resize((100, int(100 * image.height / image.width)))
 
 with st.sidebar.container():
     MODEL = st.selectbox("Model", ["gpt-3.5-turbo", "gpt-4"])
-    temperature = st.slider("Temperature", 0.0, 1.0, 0.5)
-    max_tokens = st.slider("Max Tokens", 50, 1000, 500)
-    k = st.slider("Context Blocks", 1, 5, 3)
+    temperature = st.slider("Temperature", 0.0, 1.0, 0.3)
+    max_tokens = st.slider("Max Tokens", 50, 2500, 1000)
+    k = st.slider("Context Blocks", 1, 30, 5)
     st.divider()
     st.image(image)
     st.title("Hi, I'm Ramon :wave:")

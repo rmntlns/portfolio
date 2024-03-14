@@ -65,9 +65,9 @@ def new_chat():
 
 with st.sidebar.container():
     model = st.selectbox("Model", ["gpt-3.5-turbo", "gpt-4"])
-    temperature = st.slider("Temperature", 0.0, 1.0, 0.5)
-    max_tokens = st.slider("Max Tokens", 50, 1000, 500)
-    k = st.slider("Context Blocks", 1, 5, 3)
+    temperature = st.slider("Temperature", 0.0, 1.0, 0.3)
+    max_tokens = st.slider("Max Tokens", 50, 2500, 1000)
+    k = st.slider("Context Blocks", 1, 30, 5)
     st.button(label="Wipe Memory", on_click=new_chat, type="primary")
     st.divider()
     st.image(image)
