@@ -8,4 +8,3 @@ chromadb
 tiktoken
 pillow
 networkx
-pysqlite3

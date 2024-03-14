@@ -80,16 +80,6 @@ with st.container():
                         st.session_state["db"] = db
                     st.success("Done!")
 
-            elif file_load and filetype == "csv":
-                df = pd.read_csv(file_path)
-                loader = DataFrameLoader(df)
-                data = loader.load()
-                if data:
-                    with st.spinner("Chunking and Vectorizing..."):
-                        db = gen_db()
-                        st.session_state["db"] = db
-                    st.success("Done!")
-
             elif file_load and filetype == "pdf":
                 loader = PyPDFLoader(file_path)
                 data = loader.load()
