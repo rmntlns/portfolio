@@ -66,8 +66,6 @@ with st.container():
         os.environ["openai_api_key"] = openai.api_key
         st.subheader("Upload a document.")
         file_load = st.file_uploader("Upload File (TXT or PDF)")
-        st.subheader("OR Paste a link to an Article.")
-        url_load = st.text_input(label="Paste URL and press Enter", placeholder="Paste your URL here and press Enter")
         if file_load:
             file_path = file_save(file_load)
             filename = file_load.name
@@ -82,15 +80,15 @@ with st.container():
                         st.session_state["db"] = db
                     st.success("Done!")
 
-            # elif file_load and filetype == "csv":
-            #     df = pd.read_csv(file_path)
-            #     loader = DataFrameLoader(df)
-            #     data = loader.load()
-            #     if data:
-            #         with st.spinner("Chunking and Vectorizing..."):
-            #             db = gen_db()
-            #             st.session_state["db"] = db
-            #         st.success("Done!")
+            elif file_load and filetype == "csv":
+                df = pd.read_csv(file_path)
+                loader = DataFrameLoader(df)
+                data = loader.load()
+                if data:
+                    with st.spinner("Chunking and Vectorizing..."):
+                        db = gen_db()
+                        st.session_state["db"] = db
+                    st.success("Done!")
 
             elif file_load and filetype == "pdf":
                 loader = PyPDFLoader(file_path)
