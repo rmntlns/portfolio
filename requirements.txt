@@ -8,4 +8,4 @@ chromadb
 tiktoken
 pillow
 networkx
-pysqlite==3.35.0
+pysqlite3==3.35.0
