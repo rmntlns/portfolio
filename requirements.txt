@@ -1,10 +1,10 @@
 streamlit
 streamlit-chat 
 openai
+langchain
 langchain-openai
 langchain-community
 chromadb
 tiktoken
 pillow
 networkx
-importlib-metadata==6.6.0
