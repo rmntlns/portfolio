@@ -11,6 +11,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.chat_models import ChatOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
+import chromadb
 
 st.set_page_config(
     page_title="Ramon Tilanus Portfolio",
@@ -51,7 +52,7 @@ def gen_db():
     for i, text in enumerate(texts):
         text.metadata["source"] = f"Document {i + 1}"
     embeddings = OpenAIEmbeddings(openai_api_key=openai.api_key)
-    db = Chroma.from_documents(texts, embeddings)
+    db = chromadb.from_documents(texts, embeddings)
     return db
 
 
