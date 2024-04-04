@@ -1,9 +1,11 @@
 streamlit
 streamlit-chat 
-openai
 langchain
 langchain-openai
 langchain-community
+sentence-transformers
+openai
+pypdf
 chromadb
 tiktoken
 pillow

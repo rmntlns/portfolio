@@ -2,113 +2,138 @@ __import__('pysqlite3')
 import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import os
-import openai
 import tempfile
 import streamlit as st
-import pandas as pd
-from PIL import Image
-from langchain_community.document_loaders import TextLoader
-from langchain_community.document_loaders import DataFrameLoader
-from langchain_community.document_loaders import PyPDFLoader
+from langchain.chat_models import ChatOpenAI
+from langchain.document_loaders import PyPDFLoader
+from langchain.memory import ConversationBufferMemory
+from langchain.memory.chat_message_histories import StreamlitChatMessageHistory
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.chat_models import ChatOpenAI
+from langchain.callbacks.base import BaseCallbackHandler
+from langchain.chains import ConversationalRetrievalChain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-import chromadb
 
-st.set_page_config(
-    page_title="Ramon Tilanus Portfolio",
-    page_icon="🧊",
-    layout="centered",
-    initial_sidebar_state="auto",
-    menu_items={
-        'Get Help': None,
-        'Report a bug': None,
-        'About': None
-    }
-)
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_ENDPOINT"]="https://api.smith.langchain.com"
+os.environ["LANGCHAIN_API_KEY"]="ls__38a2804f07f44b929b61733aa2936f93"
+os.environ["LANGCHAIN_PROJECT"]="spotless-wash"
 
-if "db" not in st.session_state:
-    st.session_state["db"] = []
-if "openai_api_key" not in st.session_state:
-    st.session_state["openai_api_key"] = []
+st.set_page_config(page_title="Ramon's Portfolio", page_icon="💧")
+st.title("💧Chat with PDF")
+
+@st.cache_resource(ttl="1h", experimental_allow_widgets=True, show_spinner="Chunking and vectorizing documents...")
+def configure_vectordb(uploaded_files):
+    # Read documents
+    docs = []
+    temp_dir = tempfile.TemporaryDirectory()
+    for file in uploaded_files:
+        temp_filepath = os.path.join(temp_dir.name, file.name)
+        with open(temp_filepath, "wb") as f:
+            f.write(file.getvalue())
+        loader = PyPDFLoader(temp_filepath)
+        docs = loader.load()
+
+    # Split documents
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=200)
+    splits = text_splitter.split_documents(docs)
+
+    # Create embeddings and store in vectordb
+    embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
+    # vectordb = DocArrayInMemorySearch.from_documents(splits, embeddings)
+    vectordb = Chroma.from_documents(splits, embeddings)
+
+    return vectordb
+
+def configure_retriever(k):
+    # Define retriever
+    retriever = vectordb.as_retriever(search_type="mmr", search_kwargs={"k": k})
+
+    return retriever
+
+class StreamHandler(BaseCallbackHandler):
+    def __init__(self, container: st.delta_generator.DeltaGenerator, initial_text: str = ""):
+        self.container = container
+        self.text = initial_text
+        self.run_id_ignore_token = None
+
+    def on_llm_start(self, serialized: dict, prompts: list, **kwargs):
+        # Workaround to prevent showing the rephrased question as output
+        if prompts[0].startswith("Human"):
+            self.run_id_ignore_token = kwargs.get("run_id")
+
+    def on_llm_new_token(self, token: str, **kwargs) -> None:
+        if self.run_id_ignore_token == kwargs.get("run_id", False):
+            return
+        self.text += token
+        self.container.markdown(self.text)
 
 
-data = None
-image = Image.open('pfp.png')
-image = image.resize((100, int(100 * image.height / image.width)))
+class PrintRetrievalHandler(BaseCallbackHandler):
+    def __init__(self, container):
+        self.status = container.status("**Context Retrieval**")
 
+    def on_retriever_start(self, serialized: dict, query: str, **kwargs):
+        self.status.write(f"**Question:** {query}")
+        self.status.update(label=f"**Context Retrieval:** {query}")
 
-def file_save(file_load):
-    with tempfile.NamedTemporaryFile(delete=False) as f:
-        f.write(file_load.getvalue())
-        return f.name
-
-
-def gen_db():
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=20,
-        length_function=len,
-    )
-    texts = text_splitter.create_documents([doc.page_content for doc in data])
-    for i, text in enumerate(texts):
-        text.metadata["source"] = f"Document {i + 1}"
-    embeddings = OpenAIEmbeddings(openai_api_key=openai.api_key)
-    db = chromadb.from_documents(texts, embeddings)
-    return db
-
-
-with st.container():
-    st.header("Enter your OpenAI API Key")
-    openai_api_key = st.text_input(label="OpenAI API Key", placeholder="Paste your OpenAI API Key, sk-", type="password")
-    st.session_state["openai_api_key"] = openai_api_key
-    
-
-    if openai_api_key:
-        openai.api_key = openai_api_key
-        os.environ["openai_api_key"] = openai.api_key
-        st.subheader("Upload a document.")
-        file_load = st.file_uploader("Upload File (TXT, PDF or CSV)")
-        if file_load:
-            file_path = file_save(file_load)
-            filename = file_load.name
-            filetype = filename.split(".")[-1]
-
-            if file_load and filetype == "txt":
-                loader = TextLoader(file_path, encoding='utf-8')
-                data = loader.load()
-                if data:
-                    with st.spinner("Chunking and Vectorizing..."):
-                        db = gen_db()
-                        st.session_state["db"] = db
-                    st.success("Done!")
-
-            elif file_load and filetype == "csv":
-                df = pd.read_csv(file_path)
-                loader = DataFrameLoader(df)
-                data = loader.load()
-                if data:
-                    with st.spinner("Chunking and Vectorizing..."):
-                        db = gen_db()
-                        st.session_state["db"] = db
-                    st.success("Done!")
-
-            elif file_load and filetype == "pdf":
-                loader = PyPDFLoader(file_path)
-                data = loader.load()
-                if data:
-                    with st.spinner("Chunking and Vectorizing..."):
-                        db = gen_db()
-                        st.session_state["db"] = db
-                    st.success("Done!")
-    else:
-        st.info("Please provide your API Key.")
+    def on_retriever_end(self, documents, **kwargs):
+        for idx, doc in enumerate(documents):
+            source = os.path.basename(doc.metadata["source"])
+            self.status.write(f"**Document {idx} from {source}**")
+            self.status.markdown(doc.page_content)
+        self.status.update(state="complete")
 
 with st.sidebar.container():
-    st.image(image)
-    st.title("Hi, I'm Ramon :wave:")
-    st.subheader("I develop simple AI tools for small business applications.")
-    st.subheader(
-        "You can interact with your personal documents using OpenAI's chatGPT. Try it out..."
-    )
+    openai_api_key = st.text_input("OpenAI API Key", type="password")
+    if not openai_api_key:
+        st.info("Please add your OpenAI API key to continue.")
+        st.stop()
+
+    if openai_api_key:
+        uploaded_files = st.file_uploader(
+            label="Upload PDF files", type=["pdf"], accept_multiple_files=True
+        )
+    if not uploaded_files:
+        st.info("Please upload PDF documents to continue.")
+        if st.button("Clear Cache"): 
+            st.cache_resource.clear()
+        st.stop()
+
+    if uploaded_files:
+        model = st.selectbox("Model", ["gpt-3.5-turbo", "gpt-4"])
+        temperature = st.slider("Temperature", 0.0, 1.0, 0.3)
+        max_tokens = st.slider("Max Tokens", 50, 2500, 2000)
+        k = st.slider("Context Blocks", 1, 20, 5)
+
+vectordb = configure_vectordb(uploaded_files)
+
+retriever = configure_retriever(k)
+
+# Setup memory for contextual conversation
+msgs = StreamlitChatMessageHistory()
+memory = ConversationBufferMemory(memory_key="chat_history", chat_memory=msgs, return_messages=True)
+
+# Setup LLM and QA chain
+llm = ChatOpenAI(
+    model_name=model, openai_api_key=openai_api_key, temperature=temperature, max_tokens=max_tokens, streaming=True
+)
+qa_chain = ConversationalRetrievalChain.from_llm(
+    llm, retriever=retriever, memory=memory, verbose=True
+)
+
+if len(msgs.messages) == 0 or st.sidebar.button("Clear message history"):
+    msgs.clear()
+    msgs.add_ai_message("How can I help you?")
+
+avatars = {"human": "user", "ai": "assistant"}
+for msg in msgs.messages:
+    st.chat_message(avatars[msg.type]).write(msg.content)
+
+if user_query := st.chat_input(placeholder="Ask me anything!"):
+    st.chat_message("user").write(user_query)
+
+    with st.chat_message("assistant"):
+        retrieval_handler = PrintRetrievalHandler(st.container())
+        stream_handler = StreamHandler(st.empty())
+        response = qa_chain.run(user_query, callbacks=[retrieval_handler, stream_handler])
