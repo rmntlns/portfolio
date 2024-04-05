@@ -17,7 +17,7 @@ from langchain_community.vectorstores import Chroma
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_ENDPOINT"]="https://api.smith.langchain.com"
 os.environ["LANGCHAIN_API_KEY"]="ls__38a2804f07f44b929b61733aa2936f93"
-os.environ["LANGCHAIN_PROJECT"]="spotless-wash"
+os.environ["LANGCHAIN_PROJECT"]="portfolio"
 
 st.set_page_config(page_title="Ramon's Portfolio", page_icon="💧")
 st.title("💧Chat with PDF")
