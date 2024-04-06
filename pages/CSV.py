@@ -1,6 +1,6 @@
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+# __import__('pysqlite3')
+# import sys
+# sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import os
 import tempfile
 import streamlit as st
@@ -22,25 +22,29 @@ os.environ["LANGCHAIN_PROJECT"]="portfolio"
 st.set_page_config(page_title="Ramon's Portfolio", page_icon="💧")
 st.title("💧Chat with CSV")
 
-with st.sidebar:
-    # if st.button("Clear Cache"):
-    #     st.cache_resource.clear()
-    #     st.success("Cache cleared successfully!")
-
+with st.sidebar.container():
     openai_api_key = st.text_input("OpenAI API Key", type="password")
     if not openai_api_key:
         st.info("Please add your OpenAI API key to continue.")
         st.stop()
 
-    uploaded_files = st.file_uploader("Upload PDF files", type=["pdf"], accept_multiple_files=True)
+    if openai_api_key:
+        uploaded_files = st.file_uploader(
+            label="Upload CSV files", type=["csv"], accept_multiple_files=True
+        )
+    if not uploaded_files:
+        st.info("Please upload CSV documents to continue.")
+        st.stop()
+
+    # if st.button("Clear Cache"): 
+    #     st.cache_resource.clear()
+    #     st.stop()
+
     if uploaded_files:
         model = st.selectbox("Model", ["gpt-3.5-turbo", "gpt-4"])
         temperature = st.slider("Temperature", 0.0, 1.0, 0.3)
         max_tokens = st.slider("Max Tokens", 50, 2500, 2000)
-        k = st.slider("Context Blocks", 1, 100, 20)
-    else:
-        st.info("Please upload PDF documents to continue.")
-        st.stop()
+        k = st.slider("Context Blocks", 1, 20, 5)
 
 @st.cache_resource(ttl="1h", show_spinner="Chunking and vectorizing documents...")
 def configure_vectordb(uploaded_files):
