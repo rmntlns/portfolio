@@ -1,6 +1,6 @@
-# __import__('pysqlite3')
-# import sys
-# sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import os
 import tempfile
 import streamlit as st
@@ -19,7 +19,7 @@ os.environ["LANGCHAIN_ENDPOINT"]="https://api.smith.langchain.com"
 os.environ["LANGCHAIN_API_KEY"]="ls__38a2804f07f44b929b61733aa2936f93"
 os.environ["LANGCHAIN_PROJECT"]="portfolio"
 
-st.set_page_config(page_title="Ramon's Portfolio", page_icon="💧")
+st.set_page_config(page_title="Ramon's Portfolio: Chat with CSV", page_icon="💧")
 st.title("💧Chat with CSV")
 
 with st.sidebar.container():
