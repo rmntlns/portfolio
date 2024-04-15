@@ -1,17 +1,17 @@
-poetry add poetry
-poetry add streamlit-chat 
-poetry add langchain
-poetry add langchain-openai
-poetry add langchain-community
-poetry add sentence-transformers
-poetry add openai
-poetry add pypdf
-poetry add chromadb
-poetry add tiktoken
-poetry add pillow
-poetry add networkx
-poetry add streamlit-shadcn-ui
-poetry add pinecone
-poetry add llama-index     
-poetry add llama-index-embeddings-openai 
-poetry add llama-index-vector-stores-pinecone
+poetry
+streamlit-chat 
+langchain
+langchain-openai
+langchain-community
+sentence-transformers
+openai
+pypdf
+chromadb
+tiktoken
+pillow
+networkx
+streamlit-shadcn-ui
+pinecone-client
+llama-index     
+llama-index-embeddings-openai 
+llama-index-vector-stores-pinecone
