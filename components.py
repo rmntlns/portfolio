@@ -13,7 +13,7 @@ from llama_index.core.schema import TextNode
 from llama_index.embeddings.openai import OpenAIEmbedding
 
 @st.cache_resource(ttl="1h", experimental_allow_widgets=True, show_spinner="Chunking and vectorizing documents...")
-def configure_vectordb(uploaded_files, openai_api_key, _pinecone_index):
+def configure_vectordb(uploaded_files, openai_api_key, _pinecone_index, metadata_inputs):
     docs = []
     with tempfile.TemporaryDirectory() as temp_dir:  # Use the context manager to ensure cleanup
         for file in uploaded_files:
@@ -22,18 +22,6 @@ def configure_vectordb(uploaded_files, openai_api_key, _pinecone_index):
                 f.write(file.getvalue())
 
         documents = SimpleDirectoryReader(temp_dir).load_data()
-
-    num_metadata = st.number_input('How many metadata fields would you like to add?', min_value=0, max_value=10, step=1)
-
-    metadata_inputs = {}
-    for i in range(num_metadata):
-        cols1, cols2 = st.columns(2)
-        with cols1: 
-            metadata_key = ui.input(placeholder=f'Enter metadata key {i+1}:', key=f'metadata_key_{i}')
-        with cols2:
-            metadata_value = ui.input(placeholder=f'Enter metadata value for {metadata_key}:', key=f'metadata_value_{i}')
-        metadata_inputs[metadata_key] = metadata_value
-        st.stop()
 
     if metadata_inputs is not None:
         nodes = []
@@ -44,6 +32,7 @@ def configure_vectordb(uploaded_files, openai_api_key, _pinecone_index):
             )
             nodes.append(node)
     return nodes
+
 
 def upsert_vectors(pinecone_client, index_name, namespace=None):
     st.header("Upsert Vectors to Pinecone Index")
@@ -58,17 +47,32 @@ def upsert_vectors(pinecone_client, index_name, namespace=None):
         if not openai_api_key:
             st.stop()
         pinecone_index = pinecone_client.Index(index_name)
-        nodes = configure_vectordb(uploaded_files, openai_api_key, pinecone_index)
-        cols1, cols2 = st.columns(2)
-        with cols1:
-            if st.button("Show Nodes", key="show_nodes"):
-                st.write("Nodes configured. Length: ", len(nodes), "\nFirst node: ", nodes[:1])
-        with cols2:
-            if st.button("Clear Cache", key="clear_cache"):
-                st.cache_data.clear()
+        num_metadata = st.number_input('How many metadata fields would you like to add?', min_value=0, max_value=30, step=1)
+
+        metadata_inputs = {}
+        for i in range(num_metadata):
+            cols1, cols2 = st.columns(2)
+            with cols1: 
+                metadata_key = ui.input(placeholder=f'Enter metadata key {i+1}:', key=f'metadata_key_{i}')
+            with cols2:
+                metadata_value = ui.input(placeholder=f'Enter metadata value for {metadata_key}:', key=f'metadata_value_{i}')
+            metadata_inputs[metadata_key] = metadata_value
+
         # Button to upsert vectors to Pinecone
+                
         upsert_button = st.button("Upsert Vectors", key="upsert_vectors_button")
+        if not upsert_button:
+            st.stop()
         if upsert_button:
+            nodes = configure_vectordb(uploaded_files, openai_api_key, pinecone_index, metadata_inputs)
+            cols1, cols2 = st.columns(2)
+            with cols1:
+                if st.button("Show Nodes", key="show_nodes"):
+                    st.write("Nodes configured. Length: ", len(nodes), "\nFirst node: ", nodes[:1])
+            with cols2:
+                if st.button("Clear Cache", key="clear_cache"):
+                    st.cache_data.clear()
+
             vector_store = PineconeVectorStore(pinecone_index=pinecone_index, namespace=namespace if namespace else None)
             # Change embedding model
             embed_model =  OpenAIEmbedding(api_key=openai_api_key, model="text-embedding-3-small")
