@@ -25,6 +25,7 @@ llama-index = "0.10.28"
 llama-index-embeddings-openai = "0.1.7"
 llama-index-vector-stores-pinecone = "^0.1.4"
 pysqlite3 = "^0.5.2"
+langchain-pinecone = "^0.1.0"
 
 
 [build-system]
