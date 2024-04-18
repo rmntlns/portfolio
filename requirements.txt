@@ -11,8 +11,9 @@ tiktoken
 pillow
 networkx
 streamlit-shadcn-ui
-pinecone-client
-pysqlite3-binary
+pinecone
 llama-index     
 llama-index-embeddings-openai 
 llama-index-vector-stores-pinecone
+langchain-pinecone
+langchainhub
