@@ -17,5 +17,4 @@ llama-index-embeddings-openai
 llama-index-vector-stores-pinecone
 langchain-pinecone
 langchainhub
-pysqlite3
-libsqlite3-dev
+pysqlite3-binary
